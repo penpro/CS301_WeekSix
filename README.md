@@ -151,33 +151,306 @@ Links to each file in **References**.
 
 ---
 
-## Quiz 6 Notes (from my submissions)
-> These are my study notes to reproduce the reasoning quickly on a closed‑book final.
+# CS301 Quiz Review – Formal Languages and Turing Machines
 
-### Q1 – Match terms and definitions
-- **symbol** → basic building block, typically a character or a digit  
-- **alphabet** → a finite set of symbols  
-- **string** → a finite sequence of alphabet symbols  
-- **formal language** → a set of strings (over the same alphabet)  
-- **specification problem** → how to completely and precisely define languages  
-- **recognition problem** → given L and x, decide whether x ∈ L
+**Context:** Quiz on Chapter 5 topics: formal languages, regular expressions, DFAs/NFAs, and Turing machines.  
+These are notes for Questions 1–10 with answers and reasoning.
 
-### Q2 – Regex over {a,b}: “starts with a and has odd length” **or** “starts with b and has even length”
-**Correct pattern:**
+---
+
+## Question 1  
+**Prompt:** Match the term with its definition (in the context of formal languages).  
+
+**Correct matching:**
+
+- **symbol**  
+  basic building block, typically a character or a digit  
+
+- **alphabet**  
+  a finite set of symbols  
+
+- **string**  
+  a finite sequence of alphabet symbols  
+
+- **formal language**  
+  a set of strings (possibly infinite), all over the same alphabet  
+
+- **specification problem**  
+  a problem in formal languages: "How do we completely and precisely define formal languages?"  
+
+- **recognition problem**  
+  a problem in formal languages: "Given a language L and a string x, is x in L?"
+
+**Mental hook:**  
+Specification is about defining the set. Recognition is about testing membership in that set.
+
+---
+
+## Question 2  
+**Prompt:** Which regular expression specifies a language over the binary alphabet {a, b} that
+
+- starts with `a` and has odd length, or  
+- starts with `b` and has even length?
+
+Options:
+
+1. `a((a|b)(a|b))*`  
+2. `a(aa)* | b(b)*`  
+3. `a(a|b)* | b(a|b)(a|b)*`  
+4. `a((a|b)(a|b))* | b(a|b)((a|b)(a|b))*`  
+
+**Correct answer:**  
+`a((a|b)(a|b))* | b(a|b)((a|b)(a|b))*`  
+
+**Why it works:**
+
+- Left part: `a((a|b)(a|b))*`  
+  - Starts with `a`.  
+  - `((a|b)(a|b))*` is any number of pairs of symbols.  
+  - Total length: `1 + 2k`, which is odd.
+
+- Right part: `b(a|b)((a|b)(a|b))*`  
+  - Starts with `b`.  
+  - After the initial `b`, `(a|b)` gives one more symbol, so current length is 2 (even).  
+  - `((a|b)(a|b))*` adds pairs of symbols, keeping the length even.  
+  - Total length: `2 + 2k`, which is even.
+
+**Why the others fail:**
+
+- `a((a|b)(a|b))*`  
+  - Only covers strings starting with `a` and having odd length. No branch for the `b` case.
+
+- `a(aa)* | b(b)*`  
+  - First branch only allows strings like `a`, `aaa`, `aaaaa`, all `a`s.  
+  - Second branch only allows strings of `b`s and does not enforce even length.  
+  - Does not match "arbitrary middle bits" and correct parity together.
+
+- `a(a|b)* | b(a|b)(a|b)*`  
+  - First branch allows any length starting with `a` (even or odd).  
+  - Second branch allows any length at least 2 starting with `b` (even or odd).  
+  - No parity guarantees.
+
+---
+
+## Question 3  
+**Prompt:** Which regular expression specifies a language over the set of binary strings that starts and ends with the same symbol?
+
+Options:
+
+1. `0*0 | 1*1`  
+2. `0((0|1)*0) | 1((0|1)*1)`  
+3. `0((0|1)*0)`  
+4. `0((1)*0) | 1((0)*1)`  
+
+**Best answer from the given options:**  
+`0((0|1)*0) | 1((0|1)*1)`  
+
+**Reasoning:**
+
+- For strings starting and ending with `0`:  
+  - `0((0|1)*0)` means first symbol is `0`, last symbol is `0`, and the middle can be any mixture of `0`s and `1`s.  
+- For strings starting and ending with `1`:  
+  - `1((0|1)*1)` does the same with `1` at both ends.
+
+This captures the structure "same symbol at start and end, arbitrary middle."
+
+Note: As written, it does not generate the one-character strings `"0"` or `"1"` (since there is always a middle part `(0|1)*`). In practice, you could extend it to  
+`0 | 1 | 0(0|1)*0 | 1(0|1)*1`,  
+but among the provided options, (2) is the correct structural answer.
+
+---
+
+## Question 4  
+**Prompt:** Write a Java regular expression to match phone numbers, with or without area codes.  
+The forms are:
+
+- With area code: `(609) 555-1234`  
+- Without area code: `555-1234`
+
+**Good Java regex (as a string literal):**
+
+```java
+"^(\([0-9]{3}\) )?[0-9]{3}-[0-9]{4}$"
 ```
-a((a|b)(a|b))* | b(a|b)((a|b)(a|b))*
-```
-**Why:**  
-- Left side `a((a|b)(a|b))*` enforces 1 + 2k symbols → odd length, starts with `a`.  
-- Right side `b(a|b)((a|b)(a|b))*` enforces 2 + 2k symbols → even length, starts with `b`.
 
-Common wrong answers and why they fail:
-- `a((a|b)(a|b))*` only covers the “a and odd” half.  
-- `a(aa)* | b(b)*` restricts interior letters to a single symbol and does not enforce even length on the `b` branch.  
-- `a(a|b)* | b(a|b)(a|b)*` ignores parity constraints.
+**Breakdown:**
 
-### Q3 – [pending]
-I don’t have the exact prompt in my notes. General approach: translate each English constraint into a building block, then combine with union/concat/star and, if parity shows up, group characters in pairs `((a|b)(a|b))*` or use closure and anchors like “starts with” and “ends with.”
+- `^` and `$` anchor the match to the start and end of the string.  
+- `(\([0-9]{3}\) )?`  
+  - `\(` and `\)` match literal parentheses.  
+  - `[0-9]{3}` is a three-digit area code.  
+  - The trailing space after the closing parenthesis matches `(609) ` style.  
+  - `(...)?` makes the whole area code optional.  
+- `[0-9]{3}-[0-9]{4}` matches the `555-1234` portion.
+
+This pattern matches both `(609) 555-1234` and `555-1234`.
+
+---
+
+## Question 5  
+**Prompt:** Draw a DFA for bitstrings with at least one `0` and at least one `1`.  
+
+**Language:** all binary strings that contain at least one `0` and at least one `1`.
+
+**Design idea:**  
+Track whether we have seen any `0` and whether we have seen any `1`. That gives four states.
+
+States:
+
+- `q0`: have seen neither 0 nor 1 yet (start)  
+- `q1`: have seen at least one 0, but no 1 yet  
+- `q2`: have seen at least one 1, but no 0 yet  
+- `q3`: have seen at least one 0 and at least one 1 (accepting)
+
+**Transitions:**
+
+- From `q0`:
+  - on `0` → `q1`  
+  - on `1` → `q2`
+
+- From `q1` (some 0, no 1 yet):
+  - on `0` → stay in `q1`  
+  - on `1` → go to `q3`
+
+- From `q2` (some 1, no 0 yet):
+  - on `1` → stay in `q2`  
+  - on `0` → go to `q3`
+
+- From `q3` (both 0 and 1 seen):
+  - on `0` or `1` → stay in `q3`
+
+**What to draw for the assignment:**
+
+- Start arrow into `q0`.  
+- Only `q3` is an accepting state (double circle).  
+- Label transitions as above.
+
+---
+
+## Question 6  
+**Prompt:** Draw an NFA that recognizes all strings whose 4th to last character is `a`.  
+
+**Language:** strings over {a, b} such that the symbol 4 from the end is `a`.
+
+Regex intuition: `Σ* a Σ Σ Σ` (any prefix, then an `a`, then exactly three more characters).
+
+**NFA construction idea:**
+
+States: `q0` (start), `q1`, `q2`, `q3`, `q4` (accept).
+
+- From `q0`:  
+  - on `a` → `q1`  
+  - on `a` or `b` → stay in `q0`  
+
+  This lets the NFA "guess" which `a` is the one that is 4th from last, while still reading arbitrary prefix characters.
+
+- From `q1`:  
+  - on `a` or `b` → `q2`  
+
+- From `q2`:  
+  - on `a` or `b` → `q3`  
+
+- From `q3`:  
+  - on `a` or `b` → `q4`  
+
+- `q4` is an accepting state, with no outgoing transitions.
+
+**Intuition:**
+
+- While in `q0`, the NFA scans the input and may branch to `q1` whenever it sees an `a`.  
+- From `q1`, `q2`, `q3`, it must read exactly three more symbols.  
+- If the input ends exactly when the machine is in `q4`, the chosen `a` was 4th from last.  
+- If there are extra symbols after reaching `q4`, that path dies, but a different branch started later might succeed.
+
+---
+
+## Question 7  
+**Prompt:** What is the primary significance of the Turing Machine in computer science?
+
+Correct choice:
+
+> It provides a simple abstract model that can represent any computation a digital computer can perform.
+
+**Notes:**
+
+- Turing machines formalize the intuitive idea of an algorithm.  
+- Every "reasonable" programming model can be simulated by some Turing machine.  
+- This is the heart of the (informal) Church–Turing thesis.
+
+---
+
+## Question 8  
+**Prompt:** Match the Turing machine term with its definition.
+
+Correct matching recap:
+
+- **ticker-tape**  
+  stores the input, the intermediate results, and the output  
+
+- **tape head**  
+  scans the tape one cell at a time, reads the input symbol, and either leaves it unchanged or overwrites it with a new symbol  
+
+- **state transition diagram**  
+  a finite table (or graph) of instructions that specifies exactly what action the machine takes at each step  
+
+- **active cell**  
+  the cell currently being scanned by the head  
+
+- **input symbol**  
+  the symbol on the active cell  
+
+- **state**  
+  one of the possible configurations of the machine's control  
+
+- **transition**  
+  connects one state to another state and is labeled with the read symbol and the action (write symbol, move direction)
+
+---
+
+## Question 9  
+**Prompt:** The following steps that Turing machines repeat over and over are in the wrong order.  
+What is the proper order of these steps, using the current numbering?
+
+1. Shift the tape head one cell to the left or right, according to the new state's designation.  
+2. Overwrite the input symbol with the new symbol.  
+3. Look up the transition rule associated with the current state and input symbol.  
+4. Read the input symbol from the active cell.  
+5. Change the current state according to the transition rule.
+
+**Correct order:** `4, 3, 2, 5, 1`
+
+**Why:**
+
+1. **Read** the symbol on the active cell: step 4.  
+2. **Look up** the transition rule for (current state, current symbol): step 3.  
+3. Use that rule to **write** the new symbol: step 2.  
+4. Use that rule to **change state**: step 5.  
+5. Finally, **move the head** left or right as directed: step 1.
+
+---
+
+## Question 10  
+**Prompt:** Turing machines always halt.  
+
+**Correct answer:** False.
+
+**Notes:**
+
+- For some inputs, a Turing machine may run forever and never enter a halting state.  
+- This possibility is exactly what makes the halting problem interesting and undecidable.  
+- "Computable" does not mean "always halts"; it means there exists some machine that halts on every input for that *problem* or *function*.
+
+---
+
+## Quick Summary for Future Me
+
+- Formal language basics: symbol, alphabet, string, language, specification and recognition problems.  
+- Regular expression parity trick: use pairs `((a|b)(a|b))*` to enforce even-length portions.  
+- "Starts with X and has odd/even length" is usually "fix first few characters, then add pairs".  
+- For DFAs, track just enough information in states (for example, whether we have seen a 0 and a 1).  
+- NFAs are good for "some position from the end" by guessing a position and forcing a fixed number of remaining characters.  
+- Turing machines are a universal model of computation; not all runs halt, and that is fundamental to computability theory.
+
 
 ---
 
