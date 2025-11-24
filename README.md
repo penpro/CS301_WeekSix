@@ -45,11 +45,67 @@ Direct links in **References**.
 - **Subset construction:** NFA → DFA.  
 - Design tricks: encode recent suffixes in states; use product automata for combined conditions; rely on closure to compose languages.
 
+#### Example DFA state diagram – parity of the number of `a` symbols
+Strings over {a, b} with an **even** number of `a` symbols.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Even
+    Even --> Odd : "a"
+    Even --> Even : "b"
+    Odd --> Even : "a"
+    Odd --> Odd : "b"
+```
+
+- Start state: `Even` (also the only accepting state).  
+- Reading an `a` toggles between `Even` and `Odd`.  
+- Reading a `b` leaves the parity unchanged.  
+
+This is the classic pattern where a DFA’s states act like one bit of memory (“even vs odd”).
+
+
+
 ### Turing machines (high level)
 - Components: **tape** (unbounded), **head** (R/L moves, reads/writes), **finite control** with states and a transition function.  
 - Execution: read symbol → apply rule (write/move/state) → repeat until accept, reject, or run forever.  
 - Power: general model of computation; some problems are unsolvable (e.g., Halting).  
 - Practice: step through a concrete TM (like unary→binary) to see the control strategy.
+
+- #### Turing machine components at a glance
+```mermaid
+flowchart LR
+    subgraph Tape["Infinite tape (cells)"]
+        C0["..."]
+        C1["current cell"]
+        C2["..."]
+    end
+
+    Head["Read/write head"] --> C1
+    Control["Finite control
+(states + transition function)"] <---> Head
+```
+
+- The tape stores symbols and can grow as needed.  
+- The head reads and writes one cell at a time and moves left or right.  
+- The finite control encodes the program as a state machine plus transition rules.
+
+#### Example TM state diagram – unary increment
+Machine that takes a unary number (a run of `1` symbols) and appends one more `1` at the end.
+
+Input example: `111_` (underscore for blank) → Output: `1111_`
+
+```mermaid
+stateDiagram-v2
+    [*] --> Scan
+    Scan --> Scan : "read 1 → write 1, move R"
+    Scan --> Write : "read _ → write 1, stay"
+    Write --> Halt
+```
+
+- `Scan`: move right across the block of `1`s until the first blank.  
+- When the blank `_` is seen, go to `Write`, overwrite it with `1`, and then halt.  
+- This shows how TM transitions combine **read symbol, write symbol, move direction, next state**.
+
 
 ---
 
