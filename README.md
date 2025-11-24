@@ -440,6 +440,72 @@ What is the proper order of these steps, using the current numbering?
 - This possibility is exactly what makes the halting problem interesting and undecidable.  
 - "Computable" does not mean "always halts"; it means there exists some machine that halts on every input for that *problem* or *function*.
 
+## Question 12
+
+**Prompt:** Trace the operation of this Turing Machine when started with the input aabaabaa:
+
+What this machine is doing
+
+This TM is the classic palindrome checker over {a,b}. The idea:
+
+From state 0 (L) it looks at the leftmost remaining symbol.
+
+If it is a, it replaces it with # and goes to 4 (R).
+
+If it is b, it replaces it with # and goes to 6 (R).
+
+In 4 (R) or 6 (R) it moves right to the end of the remaining string (skipping a/b), until it sees a #, then:
+
+4 on # → 5 (L)
+
+6 on # → 7 (L)
+
+In 5 (L) / 7 (L) it moves left one cell to the rightmost remaining symbol and checks it:
+
+If we started with an a on the left, 5 expects an a on the right:
+
+a:# → 1 (L) (match)
+
+b → 2 (No) (mismatch)
+
+If we started with a b on the left, 7 expects a b on the right:
+
+b:# → 1 (L) (match)
+
+a → 2 (No) (mismatch)
+
+If 5 or 7 sees # instead of a letter, it goes to 3 (Yes) (we erased everything; palindrome).
+
+In 1 (L) it moves left across the interior, back to the leftmost #, then goes to 0 to start another round.
+
+So it repeatedly erases matching first and last characters until either it finds a mismatch (go to No) or everything is gone (go to Yes).
+
+What happens on aabaabaa
+
+aabaabaa is a palindrome, so the machine will ultimately go to Yes, but it takes four rounds, not just one:
+
+Coarse state sequence by “round,” ignoring the internal loops over many a/b:
+
+First pair (a … a):
+
+0 → 4 → 5 → 1 → 0
+(erase left a, move right to end, match right a, go back left)
+
+Second pair (a … a inside):
+
+0 → 4 → 5 → 1 → 0
+
+Third pair (b … b inside that):
+
+0 → 6 → 7 → 1 → 0
+
+Final pair (a … a in the middle):
+
+0 → 4 → 5 → 3
+(after erasing that last pair, 5 sees only # and jumps to Yes)
+
+So your “0-4-5-3” path is just the last round, after all the inner pairs have been erased. For the full input aabaabaa, the machine does several passes as above before it finally ends in state 3 (Yes).
+
 ---
 
 ## Quick Summary for Future Me
